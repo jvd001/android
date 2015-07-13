@@ -251,7 +251,7 @@ public class FileDetailFragment extends FileFragment implements OnClickListener 
             }
             case R.id.action_download_file:
             case R.id.action_sync_file: {
-                mContainerActivity.getFileOperationsHelper().syncFile(getFile());
+                mContainerActivity.getFileOperationsHelper().syncFile(getFile(), true);
                 return true;
             }
             case R.id.action_send_file: {
@@ -295,7 +295,6 @@ public class FileDetailFragment extends FileFragment implements OnClickListener 
                 Log_OC.e(TAG, "Incorrect view clicked!");
         }
     }
-
 
     /**
      * Check if the fragment was created with an empty layout. An empty fragment can't show file details, must be replaced.
