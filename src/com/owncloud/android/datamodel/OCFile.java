@@ -1,6 +1,8 @@
 /**
  *   ownCloud Android client application
  *
+ *   @author Bartek Przybylski
+ *   @author David A. Velasco
  *   Copyright (C) 2012  Bartek Przybylski
  *   Copyright (C) 2015 ownCloud Inc.
  *
@@ -20,6 +22,8 @@
 
 package com.owncloud.android.datamodel;
 
+import android.content.ContentResolver;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.webkit.MimeTypeMap;
@@ -42,6 +46,8 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
             return new OCFile[size];
         }
     };
+
+    private final static String PERMISSION_SHARED_WITH_ME = "S";    // TODO move to better location
 
     public static final String PATH_SEPARATOR = "/";
     public static final String ROOT_PATH = PATH_SEPARATOR;
@@ -75,6 +81,14 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
     private boolean mIsDownloading;
 
     private String mEtagInConflict;    // Save file etag in the server, when there is a conflict. No conflict =  null
+
+    private boolean mShareWithSharee;
+
+    /**
+     * URI to the local path of the file contents, if stored in the device; cached after first call
+     * to {@link #getStorageUri()}
+     */
+    private Uri mLocalUri;
 
 
     /**
@@ -120,6 +134,7 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
         mNeedsUpdateThumbnail = source.readInt() == 1;
         mIsDownloading = source.readInt() == 1;
         mEtagInConflict = source.readString();
+        mShareWithSharee = source.readInt() == 1;
 
     }
 
@@ -146,6 +161,7 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
         dest.writeInt(mNeedsUpdateThumbnail ? 1 : 0);
         dest.writeInt(mIsDownloading ? 1 : 0);
         dest.writeString(mEtagInConflict);
+        dest.writeInt(mShareWithSharee ? 1 : 0);
     }
 
     /**
@@ -208,12 +224,31 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
     }
 
     /**
+     * The URI to the file contents, if stored locally
+     *
+     * @return A URI to the local copy of the file, or NULL if not stored in the device
+     */
+    public Uri getStorageUri() {
+        if (mLocalPath == null || mLocalPath.length() == 0) {
+            return null;
+        }
+        if (mLocalUri == null) {
+            Uri.Builder builder = new Uri.Builder();
+            builder.scheme(ContentResolver.SCHEME_FILE);
+            builder.path(mLocalPath);
+            mLocalUri = builder.build();
+        }
+        return mLocalUri;
+    }
+
+    /**
      * Can be used to set the path where the file is stored
      *
      * @param storage_path to set
      */
     public void setStoragePath(String storage_path) {
         mLocalPath = storage_path;
+        mLocalUri = null;
     }
 
     /**
@@ -344,6 +379,7 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
         mNeedsUpdateThumbnail = false;
         mIsDownloading = false;
         mEtagInConflict = null;
+        mShareWithSharee = false;
     }
 
     /**
@@ -488,11 +524,12 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
         this.mEtag = (etag != null ? etag : "");
     }
 
-    public boolean isShareByLink() {
+
+    public boolean isSharedViaLink() {
         return mShareByLink;
     }
 
-    public void setShareByLink(boolean shareByLink) {
+    public void setShareViaLink(boolean shareByLink) {
         this.mShareByLink = shareByLink;
     }
 
@@ -590,5 +627,18 @@ public class OCFile implements Parcelable, Comparable<OCFile> {
 
     public void setEtagInConflict(String etagInConflict) {
         mEtagInConflict = etagInConflict;
+    }
+
+    public boolean isSharedWithSharee() {
+        return mShareWithSharee;
+    }
+
+    public void setShareWithSharee(boolean shareWithSharee) {
+        this.mShareWithSharee = shareWithSharee;
+    }
+
+    public boolean isSharedWithMe() {
+        String permissions = getPermissions();
+        return (permissions != null && permissions.contains(PERMISSION_SHARED_WITH_ME));
     }
 }
