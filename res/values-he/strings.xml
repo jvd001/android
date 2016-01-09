@@ -63,15 +63,12 @@
   <string name="filedetails_created">מועד היצירה:</string>
   <string name="filedetails_modified">מועד השינוי:</string>
   <string name="filedetails_download">הורדה</string>
-  <string name="filedetails_sync_file">רענון קובץ</string>
   <string name="filedetails_renamed_in_upload_msg">שם הקובץ השתנה ל־ %1$s במהלך ההעלאה</string>
   <string name="action_share_file">קישור לשיתוף</string>
   <string name="action_unshare_file">ביטול קישור לשיתוף</string>
   <string name="common_yes">כן</string>
   <string name="common_no">לא</string>
   <string name="common_ok">אישור</string>
-  <string name="common_cancel_download">ביטול ההורדה</string>
-  <string name="common_cancel_upload">ביטול ההעלאה</string>
   <string name="common_cancel">ביטול</string>
   <string name="common_save_exit">לשמור ולצאת</string>
   <string name="common_error">שגיאה</string>
@@ -231,6 +228,10 @@
 ⇥⇥מנהל.</string>
   <string name="share_link_file_error">שגיאה אירעה בזמן ניסיון לשתף קובץ זה או תיקייה זו</string>
   <string name="unshare_link_file_error">שגיאה אירעה בזמן ניסיון לבטל שיתוף לקובץ זה או לתיקייה זו</string>
+  <string name="activity_chooser_send_file_title">שליחה</string>
+  <string name="copy_link">העתקת קישור</string>
+  <string name="clipboard_text_copied">הועתק ללוח הגזירים - clipboard</string>
+  <string name="error_cant_bind_to_operations_service">שגיאה קריטית: לא ניתן לבצע את הפעולות</string>
   <string name="network_error_socket_exception">שגיאה אירעה בזמן חיבור לשרת.</string>
   <string name="network_error_socket_timeout_exception">שגיאה אירעה בזמן המתנה לשרת, הפעולה לא הייתה ניתנת להשלמה</string>
   <string name="network_error_connect_timeout_exception">שגיאה אירעה בזמן המתנה לשרת, הפעולה לא הייתה ניתנת להשלמה</string>

@@ -22,7 +22,11 @@
 package com.owncloud.android.files;
 
 import android.accounts.Account;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.support.v4.app.DialogFragment;
 import android.webkit.MimeTypeMap;
@@ -42,6 +46,8 @@ import com.owncloud.android.ui.activity.FileActivity;
 import com.owncloud.android.ui.dialog.ShareLinkToDialog;
 
 import org.apache.http.protocol.HTTP;
+
+import java.util.List;
 
 /**
  *
@@ -86,21 +92,46 @@ public class FileOperationsHelper {
                     );
                 }
             }
-            
-            Intent chooserIntent;
+
+            Intent openFileWithIntent;
             if (intentForGuessedMimeType != null) {
-                chooserIntent = Intent.createChooser(intentForGuessedMimeType, mFileActivity.getString(R.string.actionbar_open_with));
+                openFileWithIntent = intentForGuessedMimeType;
             } else {
-                chooserIntent = Intent.createChooser(intentForSavedMimeType, mFileActivity.getString(R.string.actionbar_open_with));
+                openFileWithIntent = intentForSavedMimeType;
             }
 
-            mFileActivity.startActivity(chooserIntent);
+            List<ResolveInfo> launchables = mFileActivity.getPackageManager().
+                    queryIntentActivities(openFileWithIntent, PackageManager.GET_INTENT_FILTERS);
+
+            if(launchables != null && launchables.size() > 0) {
+                try {
+                    mFileActivity.startActivity(
+                            Intent.createChooser(
+                                    openFileWithIntent, mFileActivity.getString(R.string.actionbar_open_with)
+                            )
+                    );
+                } catch (ActivityNotFoundException anfe) {
+                    showNoAppForFileTypeToast(mFileActivity.getApplicationContext());
+                }
+            } else {
+                showNoAppForFileTypeToast(mFileActivity.getApplicationContext());
+            }
 
         } else {
             Log_OC.wtf(TAG, "Trying to open a NULL OCFile");
         }
     }
 
+    /**
+     * Displays a toast stating that no application could be found to open the file.
+     *
+     * @param context the context to be able to show a toast.
+     */
+    private void showNoAppForFileTypeToast(Context context) {
+        Toast.makeText(context,
+                R.string.file_list_no_app_for_file_type, Toast.LENGTH_SHORT)
+                .show();
+    }
 
     public void shareFileWithLink(OCFile file) {
 
@@ -205,9 +236,12 @@ public class FileOperationsHelper {
         }
     }
 
-
+    /**
+     * Request the synchronization of a file or folder with the OC server, including its contents.
+     *
+     * @param file          The file or folder to synchronize
+     */
     public void syncFile(OCFile file) {
-
         if (!file.isFolder()){
             Intent intent = new Intent(mFileActivity, OperationsService.class);
             intent.setAction(OperationsService.ACTION_SYNC_FILE);
@@ -223,6 +257,7 @@ public class FileOperationsHelper {
             intent.putExtra(OperationsService.EXTRA_ACCOUNT, mFileActivity.getAccount());
             intent.putExtra(OperationsService.EXTRA_REMOTE_PATH, file.getRemotePath());
             mFileActivity.startService(intent);
+
         }
     }
 
@@ -297,19 +332,11 @@ public class FileOperationsHelper {
 
         // for both files and folders
         FileDownloaderBinder downloaderBinder = mFileActivity.getFileDownloaderBinder();
-        FileUploaderBinder uploaderBinder = mFileActivity.getFileUploaderBinder();
         if (downloaderBinder != null && downloaderBinder.isDownloading(account, file)) {
             downloaderBinder.cancel(account, file);
-
-            // TODO - review why is this here, and solve in a better way
-            // Remove etag for parent, if file is a favorite
-            if (file.isFavorite()) {
-                OCFile parent = mFileActivity.getStorageManager().getFileById(file.getParentId());
-                parent.setEtag("");
-                mFileActivity.getStorageManager().saveFile(parent);
-            }
-
-        } else if (uploaderBinder != null && uploaderBinder.isUploading(account, file)) {
+        }
+        FileUploaderBinder uploaderBinder = mFileActivity.getFileUploaderBinder();
+        if (uploaderBinder != null && uploaderBinder.isUploading(account, file)) {
             uploaderBinder.cancel(account, file);
         }
     }
